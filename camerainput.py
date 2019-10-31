@@ -11,6 +11,37 @@ import os
 import sys
 import time
 
+from flask import Flask, render_template, Response
+from flask_opencv_streamer.streamer import Streamer
+import cv2
+
+port = 3030
+
+app = Flask(__name__)
+
+
+@app.route('/')
+def index():
+    """Video streaming home page."""
+    return render_template('index.html')
+
+
+def gen(camera):
+    """Video streaming generator function."""
+    while True:
+        frame = camera.get_frame()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + bytearray(frame) + b'\r\n')
+
+
+@app.route('/video_feed')
+def video_feed():
+    """Video streaming route. Put this in the src attribute of an img tag."""
+    return Response(gen(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+
 import utils
 
 # Add your Computer Vision subscription key to your environment variables.
@@ -30,23 +61,37 @@ else:
 computervision_client = ComputerVisionClient(endpoint, CognitiveServicesCredentials(subscription_key))
 
 import cv2
+def gen():
+    cap = cv2.VideoCapture(1)
+    while True:
+        ret, image_np = cap.read()
 
-cap = cv2.VideoCapture(0)
-while True:
-    ret, image_np = cap.read()
 
 
-    #if object found
-    rectangle = cv2.rectangle(image_np, (384, 0), (510, 128), (0, 0, 255), 5)
+        #if object found
+        rectangle = cv2.rectangle(image_np, (384, 0), (510, 128), (0, 0, 255), 5)
 
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    text = cv2.putText(image_np, 'OpenCV', (10, 500), font, 4, (255, 255, 255), 2,
-                       cv2.LINE_AA)
-    cv2.imshow('object detection', cv2.resize(image_np, (800, 600)))
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        text = cv2.putText(image_np, 'OpenCV', (10, 500), font, 4, (255, 255, 255), 2,
+                           cv2.LINE_AA)
+        #cv2.imshow('object detection', cv2.resize(image_np, (800, 600)))
+        frames = open("stream.jpg", 'wb+')
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        cap.release()
+        if ret:  # frame captures without errors...
+            cv2.imwrite("stream.jpg", image_np)  # Save image...
 
-        cv2.destroyAllWindows()
 
-        break
+
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + bytearray(frames.read()) + b'\r\n')
+
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            cap.release()
+
+            cv2.destroyAllWindows()
+
+            break
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', debug=False, threaded=True)
