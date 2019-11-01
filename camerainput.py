@@ -12,7 +12,6 @@ import sys
 import time
 
 from flask import Flask, render_template, Response
-from flask_opencv_streamer.streamer import Streamer
 import cv2
 
 port = 3030
@@ -43,16 +42,17 @@ def video_feed():
 
 
 import utils
-
+print(os.environ['COMPUTER_VISION_SUBSCRIPTION_KEY'])
+print(os.environ['COMPUTER_VISION_ENDPOINT'])
 # Add your Computer Vision subscription key to your environment variables.
 if 'COMPUTER_VISION_SUBSCRIPTION_KEY' in os.environ:
-    subscription_key = os.environ['COMPUTER_VISION_SUBSCRIPTION_KEY']
+    subscription_key = "bf00d070b31542af8ee0e6d62a2f0e47" #os.environ['COMPUTER_VISION_SUBSCRIPTION_KEY']
 else:
     print("\nSet the COMPUTER_VISION_SUBSCRIPTION_KEY environment variable.\n**Restart your shell or IDE for changes to take effect.**")
     sys.exit()
 # Add your Computer Vision endpoint to your environment variables.
 if 'COMPUTER_VISION_ENDPOINT' in os.environ:
-    endpoint = os.environ['COMPUTER_VISION_ENDPOINT']
+    endpoint ="https://westus.api.cognitive.microsoft.com/" #os.environ['COMPUTER_VISION_ENDPOINT']
 else:
     print("\nSet the COMPUTER_VISION_ENDPOINT environment variable.\n**Restart your shell or IDE for changes to take effect.**")
     sys.exit()
@@ -72,7 +72,7 @@ def gen():
         rectangle = cv2.rectangle(image_np, (384, 0), (510, 128), (0, 0, 255), 5)
 
         font = cv2.FONT_HERSHEY_SIMPLEX
-        text = cv2.putText(image_np, 'OpenCV', (10, 500), font, 4, (255, 255, 255), 2,
+        text = cv2.putText(image_np, 'man', (10, 500), font, 4, (255, 255, 255), 2,
                            cv2.LINE_AA)
         #cv2.imshow('object detection', cv2.resize(image_np, (800, 600)))
         frames = open("stream.jpg", 'wb+')
